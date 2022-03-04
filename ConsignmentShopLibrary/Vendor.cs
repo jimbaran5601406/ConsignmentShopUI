@@ -11,5 +11,11 @@ namespace ConsignmentShopLibrary
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public double Commission { get; set; }
+
+        public Vendor()
+        {
+            // デフォルト手数料の設定。プロパティに直接代入するようなことはせずコンストラクタで設定
+            Commission = .5;
+        }
     }
 }
