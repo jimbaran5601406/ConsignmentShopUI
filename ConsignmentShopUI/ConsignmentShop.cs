@@ -13,58 +13,97 @@ namespace ConsignmentShopUI
 {
     public partial class ConsignmentShop : Form
     {
-        private Store store = new Store();
-
-        BindingSource itemsBinding = new BindingSource();
+        private Store Store = new Store();
+        private List<Item> ShoppingCartData = new List<Item>();
+        BindingSource ItemsBinding = new BindingSource();
+        BindingSource CartBinding = new BindingSource();
+        BindingSource VendorsBinding = new BindingSource();
+        private decimal StoreProfit = 0;
 
         public ConsignmentShop()
         {
             InitializeComponent();
             SetupData();
 
-            itemsBinding.DataSource = store.Items;
-            ItemsListBox.DataSource = itemsBinding;
-
+            ItemsBinding.DataSource = Store.Items;
+            ItemsListBox.DataSource = ItemsBinding;
             ItemsListBox.DisplayMember = "Display";
             ItemsListBox.ValueMember = "Display";
+
+            CartBinding.DataSource = ShoppingCartData;
+            ShoppingCartListBox.DataSource = CartBinding;
+            ShoppingCartListBox.DisplayMember = "Display";
+            ShoppingCartListBox.ValueMember = "Display";
+
+            VendorsBinding.DataSource = Store.Vendors;
+            VendorListBox.DataSource = VendorsBinding;
+            VendorListBox.DisplayMember = "Display";
+            VendorListBox.ValueMember = "Display";
         }
 
         private void SetupData()
         {
-            store.Vendors.Add(new Vendor { FirstName = "Bill", LastName = "Smith" });
-            store.Vendors.Add(new Vendor { FirstName = "Sue", LastName = "Jones" });
+            Store.Vendors.Add(new Vendor { FirstName = "Bill", LastName = "Smith" });
+            Store.Vendors.Add(new Vendor { FirstName = "Sue", LastName = "Jones" });
 
-            store.Items.Add(new Item
+            Store.Items.Add(new Item
             {
                 Title = "Moby Dick",
                 Description = "A book about a whale",
                 Price = 4.50M,
-                Owner = store.Vendors[0]
+                Owner = Store.Vendors[0]
             });
-            store.Items.Add(new Item
+            Store.Items.Add(new Item
             {
                 Title = "A Tale of Two Cities",
                 Description = "A book about a revolution",
                 Price = 3.80M,
-                Owner = store.Vendors[1]
+                Owner = Store.Vendors[1]
             });
-            store.Items.Add(new Item
+            Store.Items.Add(new Item
             {
                 Title = "Harry Potter Book 1",
                 Description = "A book about a boy",
                 Price = 5.20M,
-                Owner = store.Vendors[1]
+                Owner = Store.Vendors[1]
             });
-            store.Items.Add(new Item
+            Store.Items.Add(new Item
             {
                 Title = "Jane Austion",
                 Description = "A book about a girl",
                 Price = 1.50M,
-                Owner = store.Vendors[0]
+                Owner = Store.Vendors[0]
             });
 
-            store.Name = "Seconds are Better";
+            Store.Name = "Seconds are Better";
 
+        }
+
+        private void AddToCart_Click(object sender, EventArgs e)
+        {
+            Item selectedItem = (Item)ItemsListBox.SelectedItem;
+
+            ShoppingCartData.Add(selectedItem);
+            // BindingSource更新後はResetBindingsメソッドを実行
+            CartBinding.ResetBindings(false);
+        }
+
+        private void MakePurchase_Click(object sender, EventArgs e)
+        {
+            foreach (Item item in ShoppingCartData)
+            {
+                item.Sold = true;
+                item.Owner.PaymentDue += (decimal)item.Owner.Commission * item.Price;
+                StoreProfit += (1 - (decimal)item.Owner.Commission) * item.Price;
+            }
+
+            ShoppingCartData.Clear();
+            ItemsBinding.DataSource = Store.Items.FindAll(x => x.Sold == false);
+            StoreProfitValue.Text = string.Format("${0}", StoreProfit);
+
+            CartBinding.ResetBindings(false);
+            ItemsBinding.ResetBindings(false);
+            VendorsBinding.ResetBindings(false);
         }
     }
 }
